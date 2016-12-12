@@ -23,15 +23,16 @@
 
 - name: Check if timezone is valid
   stat: path={{zoneinfo_dir}}{{timezone}}
-  register: timezone_file
+  register: timezone_validation
+  when: ansible_os_family == 'Debian'
   tags: ['timezone']
-  
+
 - name: Set timezone config
   template: src="timezone-{{ansible_os_family}}.j2"
             dest={{timezone_file}}
   tags: ['timezone']
+  when: timezone_validation.stat.exists
   become: yes
-  when: timezone_file.stat.exists
 
 - name: Set link to localtime
   file: state=link
@@ -40,5 +41,5 @@
         force=yes
   tags: ['timezone']
   become: yes
-  when: timezone_file.stat.exists
-  notify: update tzdata  
+  when: timezone_validation.stat.exists
+  notify: update tzdata
